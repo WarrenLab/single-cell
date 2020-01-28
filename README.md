@@ -37,7 +37,7 @@ available, though. For example, there is a Cell Ranger chicken reference at
 ```
 The commands I used to generate this reference can be found in this repository
 in `make_cellranger_reference.sh`. Take a look at the
-[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references](official documentation)
+[official documentation](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references)
 on making a Cell Ranger reference for more information. As recommended in the
 documentation, this example script keeps only protein-coding genes (including
 those in mtDNA) and lncRNAs, discarding other types of features like rRNAs that
