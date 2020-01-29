@@ -43,8 +43,30 @@ documentation, this example script keeps only protein-coding genes (including
 those in mtDNA) and lncRNAs, discarding other types of features like rRNAs that
 could confound the analysis.
 
-### Creating a sample sheet for comparison experiments
-(in progress)
+### Creating a sample sheet
+Cell Ranger needs a table of information about your samples as input. This is a
+good place to note information about, e.g., which samples are control and which
+are treatment, so that these data are associated with the samples in the output
+tables. It takes this as a comma-separated value (csv) file with the first line
+as a header. The first column must be called `library_id` and contain the id
+of the sample as encoded in the fastq filename (e.g., the library ID of a file
+called `61C_S7_L001_R1_001.fastq.gz` is just `61C`). All other columns are
+optional, and can contain whatever data you'd like. Here's an example:
+```
+library_id,disease_resistance,challenge_status
+61C,resistant,control
+62C,resistant,control
+63C,resistant,control
+72C,susceptible,control
+74C,susceptible,control
+75C,susceptible,control
+62M,resistant,challenged
+63M,resistant,challenged
+64M,resistant,challenged
+71M,susceptible,challenged
+72M,susceptible,challenged
+73M,susceptible,challenged
+```
 
 ### Running with nextflow
 The whole Cell Ranger pipeline can be run for all your samples with a single
