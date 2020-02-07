@@ -47,6 +47,7 @@ max.nfeature <- 2000
 max.percent.mt <- 5
 nfeatures <- 2000
 integrate <- TRUE
+nonlinear.normalization <- TRUE
 group.var <- "challenge_status"
 output.dir <- "."
 num.pcs <- 20
@@ -59,6 +60,7 @@ seurat <- CreateSeuratObject(seurat.data, min.cells = 3, min.features = 200)
 meta.data <- read.csv(aggregation)
 seurat <- add.meta.data(seurat, meta.data)
 seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^MT-")
+seurat[["percent.ribo"]] <- PercentageFeatureSet(seurat, pattern = "^RP[LS]")
 
 # make a diagnostic plot to help with filtering
 p <- ggplot(seurat@meta.data, aes(nCount_RNA, nFeature_RNA, color=percent.mt))
@@ -74,23 +76,47 @@ seurat <- subset(
         percent.mt < max.percent.mt
 )
 
-# to integrate or not to integrate?
+# normalize, find variable features, and scale. Integrate datasets if
+# requested, and use non-linear normalization if requested.
 if (integrate) {
     seurat.list <- SplitObject(seurat, split.by = group.var)
-    seurat.list <- lapply(seurat.list, function (x) {
-        x <- NormalizeData(x)
-        x <- FindVariableFeatures(x, nfeatures=nfeatures)
-    })
-    seurat.anchors <- FindIntegrationAnchors(seurat.list)
-    seurat <- IntegrateData(seurat.anchors)
+    if (nonlinear.normalization) {
+        seurat.list <- lapply(seurat.list, function (x) {
+            SCTransform(
+                x, vars.to.regress = c("percent.mt", "percent.ribo"),
+                do.scale = TRUE,
+                variable.features.n = nfeatures)
+        })
+        seurat.features <- SelectIntegrationFeatures(seurat.list,
+                                                     nfeatures=nfeatures)
+        options(future.globals.maxSize = 891289600)
+        seurat.list <- PrepSCTIntegration(seurat.list, seurat.features)
+        seurat.anchors <- FindIntegrationAnchors(
+            seurat.list, normalization.method = "SCT",
+            anchor.features = seurat.features)
+        seurat <- IntegrateData(seurat.anchors, normalization.method = "SCT")
+    } else {
+        seurat.list <- lapply(seurat.list, function (x) {
+            FindVariableFeatures(NormalizatData(x), nfeatures=nfeatures)
+        })
+        seurat.anchors <- FindIntegrationAnchors(seurat.list)
+        seurat <- IntegrateData(seurat.anchors)
+    }
 } else {
-    seurat <- NormalizeData(seurat)
-    seurat <- FindVariableFeatures(seurat, nfeatures = nfeatures)
+    if (nonlinear.normalization) {
+        seurat <- SCTransform(
+            seurat,
+            vars.to.regress = c("percent.mt", "percent.ribo"),
+            do.scale = TRUE)
+    } else {
+        seurat <- NormalizeData(seurat)
+        seurat <- FindVariableFeatures(seurat, nfeatures = nfeatures)
+        seurat <- ScaleData(seurat)
+    }
 }
 
 # do several super-standard analysis steps
-seurat <- FindClusters(FindNeighbors(RunUMAP(RunPCA(
-    ScaleData(seurat)), dims=1:num.pcs)))
+seurat <- FindClusters(FindNeighbors(RunUMAP(RunPCA(seurat), dims=1:num.pcs)))
 
 # make an elbow plot to help choose number of PCs
 p <- ElbowPlot(seurat) + geom_vline(xintercept = num.pcs)
@@ -111,3 +137,4 @@ ggsave(paste(output.dir, 'umap.clusters.pdf', sep='/'), plot=p)
 # TODO find conserved markers
 # TODO make a heatmap
 
+# TODO differential expression per cell type between groups
