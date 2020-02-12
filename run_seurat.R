@@ -7,16 +7,16 @@ library(ggplot2)
 
 add.meta.data <- function(seurat, meta.data) {
     gem.group <- as.numeric(sapply(strsplit(rownames(
-        spleen@meta.data), split="-"), "[[", 2))
+        seurat@meta.data), split="-"), "[[", 2))
     df <- data.frame(
         lapply(
-            function(c) sapply(gem.group, function(g) meta.data[g, c]),
-            colnames(meta.data)
+            colnames(meta.data),
+            function(c) sapply(gem.group, function(g) meta.data[g, c])
         ),
         row.names = rownames(seurat@meta.data)
     )
     names(df) <- colnames(meta.data)
-    return AddMetaData(seurat, df)
+    return(AddMetaData(seurat, df))
 }
 
 # this does what FindAllMarkers does, except it uses FindConservedMarkers
@@ -24,14 +24,14 @@ add.meta.data <- function(seurat, meta.data) {
 FindAllConservedMarkers <- function(
     seurat,
     grouping.var,
-    test.use = 'wilcox',
+    test.use = 'wilcox'
     ) {
     Reduce(function(df, cluster) {
         df2 <- FindConservedMarkers(
             seurat,
             ident.1 = cluster,
             grouping.var = grouping.var,
-            test.use = test.use,
+            test.use = test.use
         )
         df2$cluster <- cluster
         rbind(df, df2)
@@ -72,7 +72,7 @@ ggsave(paste(output.dir, 'feature_plot.pdf', sep='/'), plot=p)
 # do some basic filtering
 seurat <- subset(
     seurat,
-    subset = nFeature_RNA > min.nfeature & nFeature_RNA < max.nFeature &
+    subset = nFeature_RNA > min.nfeature & nFeature_RNA < max.nfeature &
         percent.mt < max.percent.mt
 )
 
@@ -90,7 +90,8 @@ if (integrate) {
         seurat.features <- SelectIntegrationFeatures(seurat.list,
                                                      nfeatures=nfeatures)
         options(future.globals.maxSize = 891289600)
-        seurat.list <- PrepSCTIntegration(seurat.list, seurat.features)
+        seurat.list <- PrepSCTIntegration(seurat.list,
+                                          anchor.features = seurat.features)
         seurat.anchors <- FindIntegrationAnchors(
             seurat.list, normalization.method = "SCT",
             anchor.features = seurat.features)
@@ -128,7 +129,7 @@ ggsave(paste(output.dir, 'umap.batches.pdf', sep='/'), plot=p)
 if (group.var == '') {
     p <- DimPlot(seurat, label=TRUE) + NoLegend()
 } else {
-    p <- DimPlot(seurat, group.by=group.var)
+    p <- DimPlot(seurat, group.by=group.var) # TODO increase width of this plot
     ggsave(paste(output.dir, 'umap.groups.pdf', sep='/'), plot=p)
     p <- DimPlot(seurat, split.by=group.var, label=TRUE) + NoLegend()
 }
