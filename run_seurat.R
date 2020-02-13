@@ -152,10 +152,21 @@ if (is.na(argv$group_var)) {
 }
 ggsave(paste(argv$output_dir, 'umap.clusters.pdf', sep='/'), plot=p)
 
-# TODO find conserved markers
-# TODO make a heatmap
+# find biomarkers for each cluster
+DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
+if (argv$integrated)
+    all.markers <- FindAllConservedMarkers(seurat, grouping.var=argv_group_var)
+else
+    all.markers <- FindAllMarkers(seurat)
+
+all.markers$feature <- rownames(all.markers)
+top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
+top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
+
+# make a heatmap # TODO change dimensions
+if (argv$integrated) DefaultAssay(seurat) <- 'integrated'
+p <- DoHeatmap(spleen, features=top5$feature) + NoLegend()
+ggsave(paste(argv$output_dir, 'markers_heatmap.pdf', sep=','), plot=p)
 
 # TODO differential expression per cell type between groups
-
-
 
