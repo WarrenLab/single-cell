@@ -77,8 +77,8 @@ and start the pipeline:
 ```
 nextflow run cellranger.nf
 ```
-This pipeline runs the [count]() command for each sample separately on its own
-node, and then runs the [aggregate]() command to normalize across samples once
+This pipeline runs the `count` command for each sample separately on its own
+node, and then runs the `aggregate` command to normalize across samples once
 all the count commands are done. Cell Ranger's batch capabilities do not play
 well with SLURM in my experience, so this pipeline runs each command in local
 mode, but parallelizes the running of the commands across different nodes.
