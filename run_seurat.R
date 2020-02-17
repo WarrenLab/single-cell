@@ -4,6 +4,8 @@ library(argparser)
 library(Seurat)
 library(dplyr)
 library(ggplot2)
+library(edgeR)
+library(MAST)
 
 add.meta.data <- function(seurat, meta.data) {
     gem.group <- as.numeric(sapply(strsplit(rownames(
@@ -35,7 +37,111 @@ FindAllConservedMarkers <- function(
         )
         df2$cluster <- cluster
         rbind(df, df2)
-    }, levels(seurat@active.ident), data.frame())
+    }, levels(seurat$seurat_clusters), data.frame())
+}
+
+calc.cdr <- function(counts) scale(colMeans(as.matrix(counts) > 0))
+
+# this is based on https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_edgeRQLFDetRate.R
+RunEdgeR <- function(
+    seurat,
+    cluster,
+    grouping.var
+) {
+    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    counts <- this.cluster.only@assays$RNA@counts
+    group <- as.matrix(this.cluster.only[[grouping.var]])
+
+    dge <- DGEList(counts, group = t(group))
+    # perform TMM normalization
+    dge <- edgeR::calcNormFactors(dge)
+    # calculate cellular detection rate to use as covariate
+    cdr <- calc.cdr(counts)
+    design <- model.matrix(~ cdr + group)
+    dge <- estimateDisp(dge, design = design)
+    fit <- glmQLFit(dge, design = design)
+    qlf <- glmQLFTest(fit)
+    tt <- topTags(qlf, n = Inf)
+
+    return(data.frame(p = tt$table$PValue,
+                      fold.change = tt$table$logFC,
+                      row.names = rownames(tt$table)))
+}
+
+# based on https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_MASTcpmDetRate.R
+RunMAST <- function(
+    seurat,
+    cluster,
+    grouping.var
+) {
+    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    counts <- this.cluster.only@assays$RNA@counts
+    group <- as.matrix(this.cluster.only[[grouping.var]])
+    group.names <- levels(factor(group[,1]))
+
+    cdr <- calc.cdr(counts)
+    dge <- DGEList(counts)
+    dge <- edgeR::calcNormFactors(dge)
+    cpms <- edgeR::cpm(dge)
+    sca <- FromMatrix(exprsArray = log2(cpms + 1),
+                      cData = data.frame(group = group, cdr = cdr))
+    zlmdata <- zlm(~cdr + group, sca)
+    mast <- lrTest(zlmdata, "group")
+
+    idx <- 1:nrow(mast[,'hurdle',])
+    names(idx) <- rownames(mast[,'hurdle',])
+    fold.change <- sapply(
+        idx, function(i) log2(mean(cpms[i, group == group.names[1]]) + 1)
+                       - log2(mean(cpms[i, group == group.names[2]]) + 1)
+        )
+
+
+    return(data.frame(p = mast[, 'hurdle', "Pr(>Chisq)"],
+                      fold.change = fold.change,
+                      row.names = rownames(mast[, 'hurdle',])))
+}
+
+# based on https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_Wilcoxon.R
+RunWilcoxon <- function(
+    seurat,
+    cluster,
+    grouping.var
+) {
+    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    counts <- this.cluster.only@assays$RNA@counts
+    group <- this.cluster.only[[grouping.var]]
+    group.names <- levels(factor(group[,1]))
+
+    dge <- DGEList(counts)
+    dge <- edgeR::calcNormFactors(dge)
+    cpms <- edgeR::cpm(dge)
+    idx <- 1:nrow(cpms)
+    names(idx) <- rownames(cpms)
+    wilcox.p <- sapply(
+        idx, function(i) wilcox.test(cpms[i, ] ~ group)$p.value)
+    fold.change <- sapply(
+        idx, function(i) log2(mean(cpms[i, group == group.names[1]]) + 1)
+                       - log2(mean(cpms[i, group == group.names[2]]) + 1)
+        )
+    return(data.frame(p = wilcox.p,
+                      fold.change = fold.change,
+                      row.names = names(wilcox.p)))
+}
+
+FindAllClusterDE <- function(
+    seurat,
+    grouping.var,
+    method = RunEdgeR
+) {
+    Reduce(function(df, cluster) {
+        df2 <- method(
+            seurat,
+            cluster = cluster,
+            grouping.var = grouping.var
+        )
+        df2$cluster <- cluster
+        rbind(df, df2)
+    }, levels(seurat$seurat_clusters), data.frame())
 }
 
 ParseArguments <- function() {
@@ -145,9 +251,9 @@ ggsave(paste(argv$output_dir, 'umap.batches.pdf', sep='/'), plot=p)
 if (is.na(argv$group_var)) {
     p <- DimPlot(seurat, label=TRUE) + NoLegend()
 } else {
-    # TODO increase width of this plot
     p <- DimPlot(seurat, group.by=argv$group_var)
-    ggsave(paste(argv$output_dir, 'umap.groups.pdf', sep='/'), plot=p)
+    ggsave(paste(argv$output_dir, 'umap.groups.pdf', sep='/'),
+           width=14, plot=p)
     p <- DimPlot(seurat, split.by=argv$group_var, label=TRUE) + NoLegend()
 }
 ggsave(paste(argv$output_dir, 'umap.clusters.pdf', sep='/'), plot=p)
@@ -155,7 +261,7 @@ ggsave(paste(argv$output_dir, 'umap.clusters.pdf', sep='/'), plot=p)
 # find biomarkers for each cluster
 DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
 if (argv$integrated)
-    all.markers <- FindAllConservedMarkers(seurat, grouping.var=argv_group_var)
+    all.markers <- FindAllConservedMarkers(seurat, grouping.var=argv$group_var)
 else
     all.markers <- FindAllMarkers(seurat)
 
@@ -163,10 +269,22 @@ all.markers$feature <- rownames(all.markers)
 top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 
-# make a heatmap # TODO change dimensions
+# make a heatmap
 if (argv$integrated) DefaultAssay(seurat) <- 'integrated'
 p <- DoHeatmap(spleen, features=top5$feature) + NoLegend()
-ggsave(paste(argv$output_dir, 'markers_heatmap.pdf', sep=','), plot=p)
+ggsave(paste(argv$output_dir, 'markers_heatmap.pdf', sep=','),
+       plot=p, width=10, height=20)
 
-# TODO differential expression per cell type between groups
+# differential expression per cell type between groups
+per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
+                                         argv$group_var, method=RunEdgeR)
+write.csv(per.cluster.DE.edgeR,
+          paste(argv$output_dir, 'per_cluster_DE.edgeR.csv', sep='/'))
+per.cluster.DE.MAST <- FindAllClusterDE(seurat, argv$group_var, method=RunMAST)
+write.csv(per.cluster.DE.MAST,
+          paste(argv$output_dir, 'per_cluster_DE.MAST.csv', sep='/'))
+per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
+                                            method=RunWilcoxon)
+write.csv(per.cluster.DE.wilcoxon,
+          paste(argv$output_dir, 'per_cluster_DE.wilcox.csv', sep='/'))
 
