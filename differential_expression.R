@@ -61,15 +61,19 @@ RunWilcoxon <- function(
     this.cluster.only <- subset(seurat, seurat_clusters == cluster)
     counts <- this.cluster.only@assays$RNA@counts
     group <- this.cluster.only[[grouping.var]]
+    group.names <- levels(factor(group[,1]))
 
-    # TODO calculate tpm! this can be done using Seurat's NormalizeData, but
-    # need to make sure we get the linearly scaled data out of the object
-    tmm <- edgeR::calcNormFactors(tpm)
-    tpm.tmm <- edgeR::cpm(tpm, lib.size = tmm * colSums(tpm))
-    idx <- 1:nrow(tpm.tmm)
-    names(idx) <- rownames(tpm.tmm)
-    wilcox_p <- sapply(idx, function(i) {
-        wilcox.test(tpm.tmm[i, ] ~ group)$p.value
-    })
-    # TODO calculate fold changes too, unless wilcox.test actually returns this
+    library(edgeR)
+    dge <- DGEList(counts)
+    dge <- calcNormFactors(dge)
+    cpms <- cpm(dge)
+    idx <- 1:nrow(cpms)
+    names(idx) <- rownames(cpms)
+    wilcox.p <- sapply(
+        idx, function(i) wilcox.test(cpms[i, ] ~ group)$p.value)
+    fold.change <- sapply(
+        idx, function(i) log2(mean(cpms[i, group == group.names[1]]) + 1)
+                       - log2(mean(cpms[i, group == group.names[2]]) + 1)
+        )
 }
+
