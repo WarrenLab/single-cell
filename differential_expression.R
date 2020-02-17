@@ -11,7 +11,7 @@ RunEdgeR <- function(
 ) {
     this.cluster.only <- subset(seurat, seurat_clusters == cluster)
     counts <- this.cluster.only@assays$RNA@counts
-    group <- this.cluster.only[[grouping.var]]
+    group <- as.matrix(this.cluster.only[[grouping.var]])
 
     library(edgeR)
     dge <- DGEList(counts, group = t(group))
@@ -36,22 +36,20 @@ RunMAST <- function(
 ) {
     this.cluster.only <- subset(seurat, seurat_clusters == cluster)
     counts <- this.cluster.only@assays$RNA@counts
-    group <- this.cluster.only[[grouping.var]]
+    group <- as.matrix(this.cluster.only[[grouping.var]])
 
     library(MAST)
     library(edgeR)
     cdr <- calc.cdr(counts)
     dge <- DGEList(counts)
     dge <- edgeR::calcNormFactors(dge)
-    cpms <- cpm(dge)
+    cpms <- edgeR::cpm(dge)
     sca <- FromMatrix(exprsArray = log2(cpms + 1),
-                      cData = data.frame(wellKey = names(group),
-                                         grp = group, cdr = cdr))
-    zlmdata <- zlm.SingleCellAssay(~cdr + group, sca)
-    mast <- lrTest(zlmdata, "grp")
+                      cData = data.frame(group = group, cdr = cdr))
+    zlmdata <- zlm(~cdr + group, sca)
+    mast <- lrTest(zlmdata, "group")
 
-    # TODO figure out what kind of data structure MAST returns and extract
-    # the stuff we want from it
+    return(mast[, 'hurdle',])
 }
 
 # based on https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_Wilcoxon.R
