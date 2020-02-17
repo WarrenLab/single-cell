@@ -4,7 +4,16 @@ Pipelines and scripts for single-cell best practices
 ## Installation
 You'll need the following software:
 * [Cell Ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/installation)
-* [Seurat](https://satijalab.org/seurat/install.html)
+* [R](https://www.r-project.org/) with the following packages, all available
+  through CRAN unless otherwise noted:
+    - [Seurat](https://satijalab.org/seurat/install.html)
+    - dplyr
+    - argparser
+    - ggplot2
+    - [edgeR](https://bioconductor.org/packages/release/bioc/html/edgeR.html)
+      (get through Bioconductor rather than CRAN)
+    - [MAST](https://github.com/RGLab/MAST) (get through BioConductor
+      rather than CRAN)
 
 If you want to use nextflow to run the Cell Ranger pipeline (recommended),
 you'll also need to install nextflow with the following command if you haven't
