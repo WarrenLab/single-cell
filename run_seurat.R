@@ -150,7 +150,7 @@ ParseArguments <- function() {
                       help='minimum number of features to use a cell')
     p <- add_argument(p, '--max-nfeature', default=5000,
                       help='maximum number of features to use a cell')
-    p <- add_argument(p, '--max-percent-mt', default=6.0,
+    p <- add_argument(p, '--max-percent-mt', default=20.0,
                       help='max % of counts from MT genes to use a cell')
     p <- add_argument(p, '--nfeatures', default=2000,
                       help='use top N features [2000]')
