@@ -221,7 +221,7 @@ if (argv$integrate) {
         seurat <- IntegrateData(seurat.anchors, normalization.method = "SCT")
     } else {
         seurat.list <- lapply(seurat.list, function (x) {
-            FindVariableFeatures(NormalizatData(x), nfeatures=argv$nfeatures)
+            FindVariableFeatures(NormalizeData(x), nfeatures=argv$nfeatures)
         })
         seurat.anchors <- FindIntegrationAnchors(seurat.list)
         seurat <- IntegrateData(seurat.anchors)
