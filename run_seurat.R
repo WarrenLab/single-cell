@@ -171,6 +171,9 @@ ParseArguments <- function() {
 
 argv <- ParseArguments()
 
+# create output directory
+dir.create(argv$output_dir)
+
 # load Cell Ranger output
 seurat.data <- Read10X(data.dir = argv$feature_matrix)
 seurat <- CreateSeuratObject(seurat.data, min.cells = 3, min.features = 100)
@@ -186,7 +189,7 @@ p <- ggplot(seurat@meta.data, aes(nCount_RNA, nFeature_RNA, color=percent.mt))
 p <- p + geom_point(size=0.2)
 p <- p + geom_hline(yintercept=argv$min_nfeature, color='red')
 p <- p + geom_hline(yintercept=argv$max_nfeature, color='red')
-ggsave(paste(argv$output_dir, 'feature_plot.pdf', sep='/'), plot=p)
+ggsave(file.path(argv$output_dir, 'feature_plot.pdf'), plot=p)
 
 # do some basic filtering
 seurat <- subset(
@@ -243,20 +246,20 @@ seurat <- FindClusters(FindNeighbors(RunUMAP(RunPCA(seurat),
 # make an elbow plot to help choose number of PCs
 p <- ElbowPlot(seurat, ndims = argv$num_pcs + 10)
 p <- p + geom_vline(xintercept = argv$num_pcs)
-ggsave(paste(argv$output_dir, 'elbow.pdf', sep='/'), plot=p)
+ggsave(file.path(argv$output_dir, 'elbow.pdf'), plot=p)
 
 # make some UMAP plots
 p <- DimPlot(seurat, group.by="library_id")
-ggsave(paste(argv$output_dir, 'umap.batches.pdf', sep='/'), plot=p)
+ggsave(file.path(argv$output_dir, 'umap.batches.pdf'), plot=p)
 if (is.na(argv$group_var)) {
     p <- DimPlot(seurat, label=TRUE) + NoLegend()
 } else {
     p <- DimPlot(seurat, group.by=argv$group_var)
-    ggsave(paste(argv$output_dir, 'umap.groups.pdf', sep='/'),
+    ggsave(file.path(argv$output_dir, 'umap.groups.pdf'),
            width=14, plot=p)
     p <- DimPlot(seurat, split.by=argv$group_var, label=TRUE) + NoLegend()
 }
-ggsave(paste(argv$output_dir, 'umap.clusters.pdf', sep='/'), plot=p)
+ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), plot=p)
 
 # find biomarkers for each cluster
 DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
@@ -272,19 +275,19 @@ top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 # make a heatmap
 if (argv$integrated) DefaultAssay(seurat) <- 'integrated'
 p <- DoHeatmap(spleen, features=top5$feature) + NoLegend()
-ggsave(paste(argv$output_dir, 'markers_heatmap.pdf', sep=','),
+ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
 
 # differential expression per cell type between groups
 per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
                                          argv$group_var, method=RunEdgeR)
 write.csv(per.cluster.DE.edgeR,
-          paste(argv$output_dir, 'per_cluster_DE.edgeR.csv', sep='/'))
+          file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'))
 per.cluster.DE.MAST <- FindAllClusterDE(seurat, argv$group_var, method=RunMAST)
 write.csv(per.cluster.DE.MAST,
-          paste(argv$output_dir, 'per_cluster_DE.MAST.csv', sep='/'))
+          file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'))
 per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
                                             method=RunWilcoxon)
 write.csv(per.cluster.DE.wilcoxon,
-          paste(argv$output_dir, 'per_cluster_DE.wilcox.csv', sep='/'))
+          file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'))
 
