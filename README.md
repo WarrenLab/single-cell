@@ -84,7 +84,7 @@ this repository into your project directory (must be on htc), edit the first few
 lines of `cellranger.nf` to point it to the right reference and fastq files,
 and start the pipeline:
 ```
-nextflow run cellranger.nf
+nextflow run pipeline.nf
 ```
 This pipeline runs the `count` command for each sample separately on its own
 node, and then runs the `aggregate` command to normalize across samples once
@@ -92,5 +92,62 @@ all the count commands are done. Cell Ranger's batch capabilities do not play
 well with SLURM in my experience, so this pipeline runs each command in local
 mode, but parallelizes the running of the commands across different nodes.
 
+Once all the Cell Ranger stuff is done, the pipeline runs some basic analyses
+in Seurat with very permissive cutoffs and (hopefully) sensible defaults. This
+should not be the only Seurat run you do. See the section below for more
+defaults.
+
 Once the pipeline is finished running, there should be a directory called
-`aggregate` with various outputs from cellranger.
+`aggregate` with various outputs from cellranger, and `seurat_out` for some
+plots from Seurat.
+
+## Seurat
+Cell Ranger aligns all the scRNA-seq reads to the reference, and then tabulates
+a matrix of how many times each gene (or rather, "feature," as you can also
+count non-gene things like lncRNAs) shows up in each cell. You probably want to
+actually use this big dataset to learn things, though, which is where Seurat
+comes in. Seurat makes it easy to do some common data analysis tasks with this
+big matrix, such as:
+* filtering out things that aren't useful, like cells that are undergoing
+  apoptosis, or genes that don't get expressed often enough to tell you anything
+* normalizing and scaling the counts to make them comparable to each other
+  across cells and features
+* integrating data from different experiments or conditions
+* reducing the dimensionality of the data so you can look at it in two
+  dimensions instead of two thousand dimensions
+* clustering the cells into groups with similar expression profiles
+* finding marker genes for each cluster so that you can label them with cell
+  identities
+* visualizing the data in a bunch of different ways
+
+This package contains a wrapper script in R that uses Seurat to do all of these
+things, `run_seurat.R`. The nextflow pipeline runs this script on the Cell
+Ranger output with permissive default parameters. That is, very few things are
+filtered out. It also makes some diagnostic plots that will hopefully be helpful
+for choosing better parameters than the defaults, such as `feature_plot.pdf` and
+`elbow.pdf`.
+
+How to choose good parameters is beyond the scope of this README, but the
+[Seurat vignettes](https://satijalab.org/seurat/vignettes.html) and
+[this paper](https://www.embopress.org/doi/10.15252/msb.20188746) are good
+places to learn about that. We **strongly** recommend running `run_seurat.R`
+with a couple different sets of parameters. You can see the options with
+```
+run_seurat.R -h
+```
+You can also use this script for comparative analysis between different sets
+of conditions (e.g., treated and untreated) with the `--integrate` and
+`--group-var` options. For example, with the example sample sheet from this
+README, you could set `--group-var=challenge_status` to compare the challenged
+and control cells.
+
+Finally, although we've included in this script all of the analyses we always
+run on a new single-cell data set, there are likely some other things you want
+to do based on the questions you generated your data to answer, so you can do
+this by starting an interactive R session and loading the seurat object, which
+the script saves as an RDS file, like this:
+```R
+library(Seurat)
+seurat <- readRDS('seurat_out/seurat.rds')
+```
+and then plot away!

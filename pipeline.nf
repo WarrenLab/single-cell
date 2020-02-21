@@ -23,6 +23,10 @@ params.ref_dir = '/path/to/cellranger/ref'
 // C5,control
 // C6,treatment
 params.sample_sheet = 'samples.csv'
+
+// path to the run_seurat.R script. If it's in your PATH, you can leave it as
+// is; otherwise, set this to explicitly point to its location.
+params.path_to_run_seurat = 'run_seurat.R'
 /*
  * ---------------- Parameters to edit end here. -------------------
  *
@@ -87,9 +91,27 @@ process cellranger_aggregate {
     file "molecule_info.csv" from molecule_info_csv
 
     output:
-    file "aggregated/outs"
+    file "aggregated/outs" into aggregated
 
     """
     cellranger aggr --id=aggregated --csv=molecule_info.csv
     """
 }
+
+process seurat {
+    publishDir 'seurat_out'
+
+    input:
+    file "aggregated/outs" from aggregated
+
+    output:
+    file 'seurat_out' into seurat_out
+
+    """
+    ${params.path_to_run_seurat} \
+        --output-dir seurat_out \
+        aggregated/outs/filtered_feature_bc_matrix \
+        aggregated/outs/aggregation.csv
+    """
+}
+
