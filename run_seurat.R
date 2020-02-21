@@ -225,6 +225,8 @@ if (argv$integrate) {
         })
         seurat.anchors <- FindIntegrationAnchors(seurat.list)
         seurat <- IntegrateData(seurat.anchors)
+        DefaultAssay(seurat) <- "integrated"
+        seurat <- ScaleData(seurat)
     }
 } else {
     if (argv$nonlinear) {
@@ -263,17 +265,18 @@ ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), plot=p)
 
 # find biomarkers for each cluster
 DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
-if (argv$integrated)
+if (argv$integrate) {
     all.markers <- FindAllConservedMarkers(seurat, grouping.var=argv$group_var)
-else
+} else {
     all.markers <- FindAllMarkers(seurat)
+}
 
 all.markers$feature <- rownames(all.markers)
 top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 
 # make a heatmap
-if (argv$integrated) DefaultAssay(seurat) <- 'integrated'
+if (argv$integrate) DefaultAssay(seurat) <- 'integrated'
 p <- DoHeatmap(spleen, features=top5$feature) + NoLegend()
 ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
