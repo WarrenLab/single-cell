@@ -245,6 +245,9 @@ if (argv$integrate) {
 seurat <- FindClusters(FindNeighbors(RunUMAP(RunPCA(seurat),
                                              dims=1:argv$num_pcs)))
 
+# save seurat object for easy loading later
+saveRDS(seurat, file = file.path(argv$output_dir, 'seurat.rds'))
+
 # make an elbow plot to help choose number of PCs
 p <- ElbowPlot(seurat, ndims = argv$num_pcs + 10)
 p <- p + geom_vline(xintercept = argv$num_pcs)
