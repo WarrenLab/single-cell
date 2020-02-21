@@ -1,6 +1,34 @@
 #!/usr/bin/env Rscript
 
 library(argparser)
+
+ParseArguments <- function() {
+    p <- arg_parser('Run Seurat')
+    p <- add_argument(p, '--min-nfeature', default=200,
+                      help='minimum number of features to use a cell')
+    p <- add_argument(p, '--max-nfeature', default=5000,
+                      help='maximum number of features to use a cell')
+    p <- add_argument(p, '--max-percent-mt', default=20.0,
+                      help='max % of counts from MT genes to use a cell')
+    p <- add_argument(p, '--nfeatures', default=2000,
+                      help='use top N features [2000]')
+    p <- add_argument(p, '--integrate', flag=TRUE,
+                      help='integrate dataset divided by --group-var')
+    p <- add_argument(p, '--group-var', help='metadata variable to group by')
+    p <- add_argument(p, '--nonlinear', flag=TRUE, help='use SCTransform')
+    p <- add_argument(p, '--output-dir', default='.',
+                      help='output directory for plots and tables')
+    p <- add_argument(p, '--num-pcs', default=20,
+                      help="number of principal components to use")
+    p <- add_argument(p, 'feature-matrix',
+                      help='folder containing feature matrix')
+    p <- add_argument(p, 'aggregation',
+                      help='csv containing metadata, output by Cell Ranger')
+    return(parse_args(p))
+}
+
+argv <- ParseArguments()
+
 library(Seurat)
 library(dplyr)
 library(ggplot2)
@@ -144,33 +172,6 @@ FindAllClusterDE <- function(
     }, levels(seurat$seurat_clusters), data.frame())
 }
 
-ParseArguments <- function() {
-    p <- arg_parser('Run Seurat')
-    p <- add_argument(p, '--min-nfeature', default=200,
-                      help='minimum number of features to use a cell')
-    p <- add_argument(p, '--max-nfeature', default=5000,
-                      help='maximum number of features to use a cell')
-    p <- add_argument(p, '--max-percent-mt', default=20.0,
-                      help='max % of counts from MT genes to use a cell')
-    p <- add_argument(p, '--nfeatures', default=2000,
-                      help='use top N features [2000]')
-    p <- add_argument(p, '--integrate', flag=TRUE,
-                      help='integrate dataset divided by --group-var')
-    p <- add_argument(p, '--group-var', help='metadata variable to group by')
-    p <- add_argument(p, '--nonlinear', flag=TRUE, help='use SCTransform')
-    p <- add_argument(p, '--output-dir', default='.',
-                      help='output directory for plots and tables')
-    p <- add_argument(p, '--num-pcs', default=20,
-                      help="number of principal components to use")
-    p <- add_argument(p, 'feature-matrix',
-                      help='folder containing feature matrix')
-    p <- add_argument(p, 'aggregation',
-                      help='csv containing metadata, output by Cell Ranger')
-    return(parse_args(p))
-}
-
-argv <- ParseArguments()
-
 # create output directory
 dir.create(argv$output_dir)
 
@@ -280,7 +281,7 @@ top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 
 # make a heatmap
 if (argv$integrate) DefaultAssay(seurat) <- 'integrated'
-p <- DoHeatmap(spleen, features=top5$feature) + NoLegend()
+p <- DoHeatmap(seurat, features=top5$feature) + NoLegend()
 ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
 
