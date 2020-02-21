@@ -192,6 +192,13 @@ p <- p + geom_hline(yintercept=argv$min_nfeature, color='red')
 p <- p + geom_hline(yintercept=argv$max_nfeature, color='red')
 ggsave(file.path(argv$output_dir, 'feature_plot.pdf'), plot=p)
 
+p <- VlnPlot(
+    seurat,
+    features = c('percent.mt', 'percent.ribo', 'nFeature_RNA', 'nCount_RNA'),
+    group.by = 'library_id'
+)
+ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p)
+
 # do some basic filtering
 seurat <- subset(
     seurat,

@@ -124,8 +124,8 @@ This package contains a wrapper script in R that uses Seurat to do all of these
 things, `run_seurat.R`. The nextflow pipeline runs this script on the Cell
 Ranger output with permissive default parameters. That is, very few things are
 filtered out. It also makes some diagnostic plots that will hopefully be helpful
-for choosing better parameters than the defaults, such as `feature_plot.pdf` and
-`elbow.pdf`.
+for choosing better parameters than the defaults, such as `feature_plot.pdf`,
+`violin_plot.pdf`, and `elbow.pdf`.
 
 How to choose good parameters is beyond the scope of this README, but the
 [Seurat vignettes](https://satijalab.org/seurat/vignettes.html) and
