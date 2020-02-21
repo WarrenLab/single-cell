@@ -76,7 +76,7 @@ RunEdgeR <- function(
     cluster,
     grouping.var
 ) {
-    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
 
@@ -102,7 +102,7 @@ RunMAST <- function(
     cluster,
     grouping.var
 ) {
-    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
     group.names <- levels(factor(group[,1]))
@@ -135,7 +135,7 @@ RunWilcoxon <- function(
     cluster,
     grouping.var
 ) {
-    this.cluster.only <- subset(seurat, seurat_clusters == cluster)
+    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- this.cluster.only[[grouping.var]]
     group.names <- levels(factor(group[,1]))
@@ -292,16 +292,19 @@ p <- DoHeatmap(seurat, features=top5$feature) + NoLegend()
 ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
 
-# differential expression per cell type between groups
-per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
-                                         argv$group_var, method=RunEdgeR)
-write.csv(per.cluster.DE.edgeR,
-          file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'))
-per.cluster.DE.MAST <- FindAllClusterDE(seurat, argv$group_var, method=RunMAST)
-write.csv(per.cluster.DE.MAST,
-          file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'))
-per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
-                                            method=RunWilcoxon)
-write.csv(per.cluster.DE.wilcoxon,
-          file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'))
+if (!is.na(argv$group_var)) {
+    # differential expression per cell type between groups
+    per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
+                                             argv$group_var, method=RunEdgeR)
+    write.csv(per.cluster.DE.edgeR,
+              file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'))
+    per.cluster.DE.MAST <- FindAllClusterDE(
+        seurat, argv$group_var, method=RunMAST)
+    write.csv(per.cluster.DE.MAST,
+              file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'))
+    per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
+                                                method=RunWilcoxon)
+    write.csv(per.cluster.DE.wilcoxon,
+              file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'))
+}
 
