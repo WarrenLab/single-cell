@@ -61,6 +61,7 @@ FindAllConservedMarkers <- function(
             seurat,
             ident.1 = cluster,
             grouping.var = grouping.var,
+            only.pos = TRUE,
             test.use = test.use
         )
         df2$cluster <- cluster
