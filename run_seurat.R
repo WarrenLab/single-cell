@@ -290,7 +290,11 @@ write.csv(all.markers, file = file.path(argv$output_dir, "all_markers.csv"),
           quote = FALSE)
 
 # make a heatmap
-if (argv$integrate) DefaultAssay(seurat) <- 'integrated'
+if (argv$integrate) {
+    # if we did integrated normalization, there might be missing genes in the
+    # combined set, so we need to have a plain normalized slot to make a heatmap
+    seurat <- ScaleData(NormalizeData(seurat))
+}
 p <- DoHeatmap(seurat, features=top5$feature) + NoLegend()
 ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
