@@ -195,9 +195,10 @@ ggsave(file.path(argv$output_dir, 'feature_plot.pdf'), plot=p)
 p <- VlnPlot(
     seurat,
     features = c('percent.mt', 'percent.ribo', 'nFeature_RNA', 'nCount_RNA'),
-    group.by = 'library_id'
+    group.by = 'library_id', ncol = 1, pt.size = 0
 )
-ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p)
+ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p,
+       height = 21, width = 7)
 
 # do some basic filtering
 seurat <- subset(
@@ -266,13 +267,13 @@ p <- DimPlot(seurat, group.by="library_id")
 ggsave(file.path(argv$output_dir, 'umap.batches.pdf'), plot=p)
 if (is.na(argv$group_var)) {
     p <- DimPlot(seurat, label=TRUE) + NoLegend()
+    ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), plot=p)
 } else {
     p <- DimPlot(seurat, group.by=argv$group_var)
-    ggsave(file.path(argv$output_dir, 'umap.groups.pdf'),
-           width=14, plot=p)
+    ggsave(file.path(argv$output_dir, 'umap.groups.pdf'), plot=p)
     p <- DimPlot(seurat, split.by=argv$group_var, label=TRUE) + NoLegend()
+    ggsave(file.path(argv$output_dir, 'umap.clusters.pdf', width = 14), plot=p)
 }
-ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), plot=p)
 
 # find biomarkers for each cluster
 DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
@@ -285,6 +286,8 @@ if (argv$integrate) {
 all.markers$feature <- rownames(all.markers)
 top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
+write.csv(all.markers, file = file.path(argv$output_dir, "all_markers.csv"),
+          quote = FALSE)
 
 # make a heatmap
 if (argv$integrate) DefaultAssay(seurat) <- 'integrated'
@@ -297,14 +300,17 @@ if (!is.na(argv$group_var)) {
     per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
                                              argv$group_var, method=RunEdgeR)
     write.csv(per.cluster.DE.edgeR,
-              file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'))
+              file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'),
+              quote = FALSE)
     per.cluster.DE.MAST <- FindAllClusterDE(
         seurat, argv$group_var, method=RunMAST)
     write.csv(per.cluster.DE.MAST,
-              file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'))
+              file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'),
+              quote = FALSE)
     per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
                                                 method=RunWilcoxon)
     write.csv(per.cluster.DE.wilcoxon,
-              file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'))
+              file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'),
+              quote = FALSE)
 }
 
