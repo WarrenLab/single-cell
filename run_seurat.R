@@ -273,7 +273,7 @@ if (is.na(argv$group_var)) {
     p <- DimPlot(seurat, group.by=argv$group_var)
     ggsave(file.path(argv$output_dir, 'umap.groups.pdf'), plot=p)
     p <- DimPlot(seurat, split.by=argv$group_var, label=TRUE) + NoLegend()
-    ggsave(file.path(argv$output_dir, 'umap.clusters.pdf', width = 14), plot=p)
+    ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), width = 14, plot=p)
 }
 
 # find biomarkers for each cluster
