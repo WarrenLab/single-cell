@@ -65,7 +65,8 @@ FindAllConservedMarkers <- function(
             test.use = test.use
         )
         df2$cluster <- cluster
-        rbind(df, df2)
+        df2$feature <- rownames(df2)
+        rbind(df, df2, make.row.names = FALSE)
     }, levels(seurat$seurat_clusters), data.frame())
 }
 
@@ -284,7 +285,6 @@ if (argv$integrate) {
     all.markers <- FindAllMarkers(seurat)
 }
 
-all.markers$feature <- rownames(all.markers)
 top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 write.csv(all.markers, file = file.path(argv$output_dir, "all_markers.csv"),
