@@ -186,7 +186,7 @@ if (!is.na(argv$aggregation)) {
     meta.data <- read.csv(argv$aggregation)
     seurat <- add.meta.data(seurat, meta.data)
 }
-seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^MT-")
+seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^(MT|mt)-")
 seurat[["percent.ribo"]] <- PercentageFeatureSet(seurat, pattern = "^RP[LS]")
 
 # make a diagnostic plot to help with filtering
