@@ -22,7 +22,7 @@ ParseArguments <- function() {
                       help="number of principal components to use")
     p <- add_argument(p, 'feature-matrix',
                       help='folder containing feature matrix')
-    p <- add_argument(p, 'aggregation',
+    p <- add_argument(p, '--aggregation',
                       help='csv containing metadata, output by Cell Ranger')
     return(parse_args(p))
 }
@@ -182,8 +182,10 @@ seurat.data <- Read10X(data.dir = argv$feature_matrix)
 seurat <- CreateSeuratObject(seurat.data, min.cells = 3, min.features = 100)
 
 # add metadata to Seurat object
-meta.data <- read.csv(argv$aggregation)
-seurat <- add.meta.data(seurat, meta.data)
+if (!is.na(argv$aggregation)) {
+    meta.data <- read.csv(argv$aggregation)
+    seurat <- add.meta.data(seurat, meta.data)
+}
 seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^MT-")
 seurat[["percent.ribo"]] <- PercentageFeatureSet(seurat, pattern = "^RP[LS]")
 
@@ -194,13 +196,22 @@ p <- p + geom_hline(yintercept=argv$min_nfeature, color='red')
 p <- p + geom_hline(yintercept=argv$max_nfeature, color='red')
 ggsave(file.path(argv$output_dir, 'feature_plot.pdf'), plot=p)
 
-p <- VlnPlot(
-    seurat,
-    features = c('percent.mt', 'percent.ribo', 'nFeature_RNA', 'nCount_RNA'),
-    group.by = 'library_id', ncol = 1, pt.size = 0
-)
-ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p,
-       height = 21, width = 7)
+if (!is.na(argv$aggregation)) {
+    p <- VlnPlot(
+        seurat,
+        features = c('percent.mt', 'percent.ribo', 'nFeature_RNA', 'nCount_RNA'),
+        group.by = 'library_id', ncol = 1, pt.size = 0
+    )
+    ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p,
+           height = 21, width = 7)
+} else {
+    p <- VlnPlot(
+        seurat,
+        features = c('percent.mt', 'percent.ribo', 'nFeature_RNA', 'nCount_RNA'),
+        ncol = 2, pt.size = 0
+    )
+    ggsave(file.path(argv$output_dir, 'violin_plot.pdf'), plot = p)
+}
 
 # do some basic filtering
 seurat <- subset(
@@ -265,8 +276,10 @@ p <- p + geom_vline(xintercept = argv$num_pcs)
 ggsave(file.path(argv$output_dir, 'elbow.pdf'), plot=p)
 
 # make some UMAP plots
-p <- DimPlot(seurat, group.by="library_id")
-ggsave(file.path(argv$output_dir, 'umap.batches.pdf'), plot=p)
+if (!is.na(argv$aggregation)) {
+    p <- DimPlot(seurat, group.by="library_id")
+    ggsave(file.path(argv$output_dir, 'umap.batches.pdf'), plot=p)
+}
 if (is.na(argv$group_var)) {
     p <- DimPlot(seurat, label=TRUE) + NoLegend()
     ggsave(file.path(argv$output_dir, 'umap.clusters.pdf'), plot=p)
