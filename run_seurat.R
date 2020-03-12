@@ -289,6 +289,7 @@ top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 write.csv(all.markers, file = file.path(argv$output_dir, "all_markers.csv"),
           quote = FALSE)
+write.csv(top5, file = file.path(argv$output_dir, "top5.csv"), quote = FALSE)
 
 # make a heatmap
 if (argv$integrate) {
