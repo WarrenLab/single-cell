@@ -294,12 +294,12 @@ if (is.na(argv$group_var)) {
 DefaultAssay(seurat) <- 'RNA' # always do DE analysis on raw counts
 if (argv$integrate) {
     all.markers <- FindAllConservedMarkers(seurat, grouping.var=argv$group_var)
+    top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
 } else {
     all.markers <- FindAllMarkers(seurat)
+    top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = avg_logFC)
 }
 
-top5 <- all.markers %>% group_by(cluster) %>% top_n(n = 5, wt = -max_pval)
-top10 <- all.markers %>% group_by(cluster) %>% top_n(n = 10, wt = -max_pval)
 write.csv(all.markers, file = file.path(argv$output_dir, "all_markers.csv"),
           quote = FALSE)
 write.csv(top5, file = file.path(argv$output_dir, "top5.csv"), quote = FALSE)
@@ -309,8 +309,10 @@ if (argv$integrate) {
     # if we did integrated normalization, there might be missing genes in the
     # combined set, so we need to have a plain normalized slot to make a heatmap
     seurat <- ScaleData(NormalizeData(seurat))
+    p <- DoHeatmap(seurat, features = top5$feature) + NoLegend()
+} else {
+    p <- DoHeatmap(seurat, features = top5$gene) + NoLegend()
 }
-p <- DoHeatmap(seurat, features=top5$feature) + NoLegend()
 ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
        plot=p, width=10, height=20)
 
