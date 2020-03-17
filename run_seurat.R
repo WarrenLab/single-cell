@@ -170,7 +170,8 @@ FindAllClusterDE <- function(
             grouping.var = grouping.var
         )
         df2$cluster <- cluster
-        rbind(df, df2)
+        df2$feature <- rownames(df2)
+        rbind(df, df2, make.row.names = FALSE)
     }, levels(seurat$seurat_clusters), data.frame())
 }
 
