@@ -127,8 +127,8 @@ RunMAST <- function(
     idx <- 1:nrow(mast[,'hurdle',])
     names(idx) <- rownames(mast[,'hurdle',])
     fold.change <- sapply(
-        idx, function(i) log2(mean(cpms[i, group == group.names[1]]) + 1)
-                       - log2(mean(cpms[i, group == group.names[2]]) + 1)
+        idx, function(i) log2(mean(cpms[i, group == group.names[2]]) + 1)
+                       - log2(mean(cpms[i, group == group.names[1]]) + 1)
         )
 
 
@@ -156,8 +156,8 @@ RunWilcoxon <- function(
     wilcox.p <- sapply(
         idx, function(i) wilcox.test(cpms[i, ] ~ group)$p.value)
     fold.change <- sapply(
-        idx, function(i) log2(mean(cpms[i, group == group.names[1]]) + 1)
-                       - log2(mean(cpms[i, group == group.names[2]]) + 1)
+        idx, function(i) log2(mean(cpms[i, group == group.names[2]]) + 1)
+                       - log2(mean(cpms[i, group == group.names[1]]) + 1)
         )
     return(data.frame(p = wilcox.p,
                       fold.change = fold.change,
