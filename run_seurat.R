@@ -113,10 +113,16 @@ RunMAST <- function(
     dge <- DGEList(counts)
     dge <- edgeR::calcNormFactors(dge)
     cpms <- edgeR::cpm(dge)
-    sca <- FromMatrix(exprsArray = log2(cpms + 1),
-                      cData = data.frame(group = group, cdr = cdr))
-    zlmdata <- zlm(~cdr + group, sca)
-    mast <- lrTest(zlmdata, "group")
+    sca <- FromMatrix(
+        exprsArray = log2(cpms + 1),
+        cData = data.frame(
+            wellKey = rownames(group),
+            group = group,
+            cdr = cdr
+        )
+    )
+    zlmdata <- zlm(as.formula(paste("~cdr +", grouping.var)), sca)
+    mast <- lrTest(zlmdata, grouping.var)
 
     idx <- 1:nrow(mast[,'hurdle',])
     names(idx) <- rownames(mast[,'hurdle',])
