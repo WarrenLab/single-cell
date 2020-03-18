@@ -145,7 +145,7 @@ RunWilcoxon <- function(
 ) {
     this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
-    group <- this.cluster.only[[grouping.var]]
+    group <- as.matrix(this.cluster.only[[grouping.var]])
     group.names <- levels(factor(group[,1]))
 
     dge <- DGEList(counts)
