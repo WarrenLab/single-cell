@@ -1,0 +1,20 @@
+Package: warrenlab-single-cell
+Title: Helper Functions For Single-Cell Analysis
+Version: 0.1
+Authors@R: person("Edward", "Rice", email = "edward.rice@missouri.edu",
+                  role = c("aut", "cre"))
+Description: This package contains helper functions to do some common tasks on
+    single-cell RNA-seq data that are not included in Seurat. Currently, the
+    two kinds of functions in this package are ones for manipulation of Seurat
+    objects (seurat_helpers.R) and for differential expression analyses
+    (differential_expression.R).
+Depends: R (>= 3.1.0)
+Imports:
+    dplyr,
+    ggplot2,
+    Seurat (>= 3.1.4),
+    edgeR,
+    MAST
+URL: http://github.com/WarrenLab/single-cell
+License: file LICENSE
+LazyData: true
