@@ -48,7 +48,7 @@ FindAllConservedMarkers <- function(
     seurat,
     grouping.var,
     test.use = 'wilcox'
-    ) {
+) {
     Reduce(function(df, cluster) {
         df2 <- FindConservedMarkers(
             seurat,

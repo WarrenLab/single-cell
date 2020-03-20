@@ -1,4 +1,4 @@
-Package: warrenlab-single-cell
+Package: warrenlabSC
 Title: Helper Functions For Single-Cell Analysis
 Version: 0.1
 Authors@R: person("Edward", "Rice", email = "edward.rice@missouri.edu",
@@ -18,3 +18,4 @@ Imports:
 URL: http://github.com/WarrenLab/single-cell
 License: file LICENSE
 LazyData: true
+RoxygenNote: 7.1.0
