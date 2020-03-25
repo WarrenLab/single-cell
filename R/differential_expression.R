@@ -179,3 +179,47 @@ FindAllClusterDE <- function(
         rbind(df, df2, make.row.names = FALSE)
     }, levels(seurat$seurat_clusters), data.frame())
 }
+
+#' Make a heatmap of the most differentially expressed genes in a cluster
+#'
+#' Given a seurat object, a table of differential expression fold changes and
+#' p-values, a cluster number, and a grouping variable name, make a heatmap
+#' that shows per-cell expression of the genes with the smallest differential
+#' expression p-values, ordered by fold change.
+#'
+#' @param seurat A seurat object with defined clusters
+#' @param diff.exp A table of differential expression p-values and fold changes
+#'   for all clusters, with columns \code{feature}, \code{cluster},
+#'   \code{fold.change}, and \code{p}.
+#' @param cluster The number of the cluster to plot expression for
+#' @param grouping.var The name of the metadata variable in \code{seurat} that
+#'   cells were grouped by in differential expression analysis
+#' @param min.fc Minimum absolute value of fold change to include a feature in
+#'   heatmap
+#' @param max.p Maximum differential expression p-value to include a feature in
+#'   heatmap
+#' @param max.features Maximum number of features to include in the heatmap
+#' @return A ggplot object containing a heatmap with expression of at most
+#'   \code{max.features} genes with the smallest differential expression
+#'   p-values, ordered by fold change, for all cells in \code{cluster}, grouped
+#'   by \code{grouping.var}.
+#' @export
+make.diffexp.heatmap <- function(
+    seurat,
+    diff.exp,
+    cluster,
+    grouping.var,
+    min.fc = 1,
+    max.p = 1e-3,
+    max.features = 30
+) {
+    selected.rows <- diff.exp[diff.exp$cluster == cluster
+                              & abs(diff.exp$fold.change) > min.fc
+                              & diff.exp$p < max.p, ]
+    selected.rows <- selected.rows[order(selected.rows$fold.change), ]
+    features <- dplyr::top_n(selected.rows, n = max.features, wt = -p)$feature
+    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
+    Seurat::DoHeatmap(this.cluster.only,
+                      features = features,
+                      group.by = grouping.var) + NoLegend()
+}
