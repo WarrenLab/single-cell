@@ -10,6 +10,7 @@
 #' @return A vector of cellular detection rate per cell
 #' @examples
 #' cdr <- calc.cdr(seurat@assays$RNA@counts)
+#' @export
 calc.cdr <- function(counts) scale(colMeans(as.matrix(counts) > 0))
 
 #' Run edgeR to perform DE analysis
@@ -28,6 +29,7 @@ calc.cdr <- function(counts) scale(colMeans(as.matrix(counts) > 0))
 #'   \code{p} and \code{fold.change}.
 #' @examples
 #' de.results <- RunEdgeR(seurat, 0, 'challenge_status')
+#' @export
 RunEdgeR <- function(
     seurat,
     cluster,
@@ -37,16 +39,16 @@ RunEdgeR <- function(
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
 
-    dge <- DGEList(counts, group = t(group))
+    dge <- edgeR::DGEList(counts, group = t(group))
     # perform TMM normalization
     dge <- edgeR::calcNormFactors(dge)
     # calculate cellular detection rate to use as covariate
     cdr <- calc.cdr(counts)
     design <- model.matrix(~ cdr + group)
-    dge <- estimateDisp(dge, design = design)
-    fit <- glmQLFit(dge, design = design)
-    qlf <- glmQLFTest(fit)
-    tt <- topTags(qlf, n = Inf)
+    dge <- edgeR::estimateDisp(dge, design = design)
+    fit <- edgeR::glmQLFit(dge, design = design)
+    qlf <- edgeR::glmQLFTest(fit)
+    tt <- edgeR::topTags(qlf, n = Inf)
 
     return(data.frame(p = tt$table$PValue,
                       fold.change = tt$table$logFC,
@@ -67,6 +69,7 @@ RunEdgeR <- function(
 #'   \code{p} and \code{fold.change}.
 #' @examples
 #' de.results <- RunMAST(seurat, 0, 'challenge_status')
+#' @export
 RunMAST <- function(
     seurat,
     cluster,
@@ -78,7 +81,7 @@ RunMAST <- function(
     group.names <- levels(factor(group[,1]))
 
     cdr <- calc.cdr(counts)
-    dge <- DGEList(counts)
+    dge <- edgeR::DGEList(counts)
     dge <- edgeR::calcNormFactors(dge)
     cpms <- edgeR::cpm(dge)
     sca <- FromMatrix(
@@ -89,8 +92,8 @@ RunMAST <- function(
             cdr = cdr
         )
     )
-    zlmdata <- zlm(as.formula(paste("~cdr +", grouping.var)), sca)
-    mast <- lrTest(zlmdata, grouping.var)
+    zlmdata <- MAST::zlm(as.formula(paste("~cdr +", grouping.var)), sca)
+    mast <- MAST::lrTest(zlmdata, grouping.var)
 
     idx <- 1:nrow(mast[,'hurdle',])
     names(idx) <- rownames(mast[,'hurdle',])
@@ -119,6 +122,7 @@ RunMAST <- function(
 #'   \code{p} and \code{fold.change}.
 #' @examples
 #' de.results <- RunMAST(seurat, 0, 'challenge_status')
+#' @export
 RunWilcoxon <- function(
     seurat,
     cluster,
@@ -129,7 +133,7 @@ RunWilcoxon <- function(
     group <- as.matrix(this.cluster.only[[grouping.var]])
     group.names <- levels(factor(group[,1]))
 
-    dge <- DGEList(counts)
+    dge <- edgeR::DGEList(counts)
     dge <- edgeR::calcNormFactors(dge)
     cpms <- edgeR::cpm(dge)
     idx <- 1:nrow(cpms)
@@ -158,6 +162,7 @@ RunWilcoxon <- function(
 #' @return A \code{data.frame} containing one row for each cluster/feature
 #'   combination, with columns \code{p}, \code{fold.change}, \code{cluster}, and
 #'   \code{feature}.
+#' @export
 FindAllClusterDE <- function(
     seurat,
     grouping.var,
