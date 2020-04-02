@@ -10,6 +10,8 @@ ParseArguments <- function() {
                       help='maximum number of features to use a cell')
     p <- add_argument(p, '--max-percent-mt', default=20.0,
                       help='max % of counts from MT genes to use a cell')
+    p <- add_argument(p, '--max-percent-ribo', default=100.0,
+                      help='max % of counts from ribosomal genes to use a cell')
     p <- add_argument(p, '--nfeatures', default=2000,
                       help='use top N features [2000]')
     p <- add_argument(p, '--integrate', flag=TRUE,
@@ -47,7 +49,7 @@ if (!is.na(argv$aggregation)) {
     seurat <- add.meta.data(seurat, meta.data)
 }
 seurat[["percent.mt"]] <- PercentageFeatureSet(seurat, pattern = "^(MT|mt)-")
-seurat[["percent.ribo"]] <- PercentageFeatureSet(seurat, pattern = "^RP[LS]")
+seurat[["percent.ribo"]] <- PercentageFeatureSet(seurat, pattern = "^(RP[LS]|rp[ls])")
 
 # make a diagnostic plot to help with filtering
 p <- ggplot(seurat@meta.data, aes(nCount_RNA, nFeature_RNA, color=percent.mt))
@@ -78,7 +80,8 @@ seurat <- subset(
     seurat,
     subset = (nFeature_RNA > argv$min_nfeature
               & nFeature_RNA < argv$max_nfeature
-              & percent.mt < argv$max_percent_mt)
+              & percent.mt < argv$max_percent_mt
+              & percent.ribo < argv$max_percent_ribo)
 )
 
 # normalize, find variable features, and scale. Integrate datasets if
