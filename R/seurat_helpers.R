@@ -61,6 +61,6 @@ FindAllConservedMarkers <- function(
         )
         df2$cluster <- cluster
         df2$feature <- rownames(df2)
-        rbind(df, df2, make.row.names = FALSE)
+        plyr::rbind.fill(df, df2)
     }, levels(seurat$seurat_clusters), data.frame())
 }
