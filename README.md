@@ -15,6 +15,18 @@ You'll need the following software:
     - [MAST](https://github.com/RGLab/MAST) (get through BioConductor
       rather than CRAN)
 
+You can install the R package contained in this repository if you've got R
+installed by downloading the source from github and then telling R to install
+it:
+```bash
+git clone https://github.com/WarrenLab/single-cell.git
+cd single-cell
+R CMD INSTALL .
+```
+This command should in theory be able to install all the dependencies so you
+don't have to do it yourself, but usually installing Seurat requires some manual
+intervention to get some of _its_ dependencies.
+
 If you want to use nextflow to run the Cell Ranger pipeline (recommended),
 you'll also need to install nextflow with the following command if you haven't
 already:

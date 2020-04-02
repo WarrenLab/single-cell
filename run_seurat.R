@@ -32,8 +32,7 @@ argv <- ParseArguments()
 library(Seurat)
 library(dplyr)
 library(ggplot2)
-library(edgeR)
-library(MAST)
+library(warrenlabSC)
 
 # create output directory
 dir.create(argv$output_dir)

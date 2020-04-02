@@ -16,6 +16,7 @@
 #' @examples
 #' meta.data <- read.csv('aggregation.csv')
 #' seurat <- add.meta.data(seurat, meta.data)
+#' @export
 add.meta.data <- function(seurat, meta.data) {
     gem.group <- as.numeric(sapply(strsplit(rownames(
         seurat@meta.data), split="-"), "[[", 2))
@@ -44,6 +45,7 @@ add.meta.data <- function(seurat, meta.data) {
 #' @return A \code{data.frame} of the outputs of all calls to
 #'   \code{FindConservedMarkers}, row-bound together with the added columns
 #'   \code{cluster} and \code{feature}.
+#' @export
 FindAllConservedMarkers <- function(
     seurat,
     grouping.var,
