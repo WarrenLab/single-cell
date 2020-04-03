@@ -93,7 +93,7 @@ if (argv$integrate) {
             SCTransform(
                 x, vars.to.regress = c("percent.mt", "percent.ribo"),
                 do.scale = TRUE,
-                variable.features.n = nfeatures)
+                variable.features.n = argv$nfeatures)
         })
         seurat.features <- SelectIntegrationFeatures(seurat.list,
                                                      nfeatures=argv$nfeatures)
