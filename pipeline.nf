@@ -110,8 +110,9 @@ process seurat {
     """
     ${params.path_to_run_seurat} \
         --output-dir seurat_out \
-        aggregated/outs/filtered_feature_bc_matrix \
-        aggregated/outs/aggregation.csv
+        --aggregation aggregated/outs/aggregation.csv \
+        aggregated/outs/filtered_feature_bc_matrix
+        
     """
 }
 
