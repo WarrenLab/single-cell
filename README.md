@@ -37,15 +37,34 @@ This creates a binary named 'nextflow' in your current directory; you probably
 want to move it to somewhere in your path.
 
 ### Nextflow on lewis
-Nextflow needs to be run from `htc` due to file-locking issues, but is much
+Nextflow needs to be run from `htc` due to file-locking issues*, but is much
 faster when it's doing file operations on `hpc`. To get around this, you can set
 it to always use a work directory on `hpc` by adding something like this to your
 `.bashrc` (changing the location, of course):
 ```bash
 export NXF_WORK=/storage/hpc/group/warrenlab/users/esrbhb/nx_work
+
+# Change work directory to group ownership and make it "stick" 
+chgrp -R warrenlab-gropu
+chmod -R ug+rwX $NXF_WORK
+chmod g+x $NXF_WORK
 ```
+
+Since files in this directory count towards the `hpc` quota associated with the 
+group ownership of that directory, this example sets the group ownership of this
+directory and its subdirectories to "warrenlab-group" (assuming that you are 
+performing work for said group).
+
 A good nextflow configuration for lewis is in `nextflow.config`. Copy this file
 to the directory you are running nextflow from.
+
+* WARNING:  A subdirectory called `.nextflow` is created (or updated) inside the
+directory from which you run Nextflow. This automatically created `.nextflow` 
+directory is what needs to exist on `htc`. We have seen cases where running 
+from a directory on `hpc` worked *some of the time*, but would later fail 
+with hard-to-diagnose errors, sometimes including Nextflow apparently 
+"forgetting" previously successful hours-long steps and rerunning them 
+needlessly.
 
 ## Cell Ranger
 ### Creating a reference
