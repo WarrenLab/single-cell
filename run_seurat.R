@@ -23,7 +23,7 @@ ParseArguments <- function() {
     p <- add_argument(p, '--num-pcs', default=20,
                       help="number of principal components to use")
     p <- add_argument(p, 'feature-matrix',
-                      help='folder containing feature matrix')
+                      help='folder or h5 containing feature matrix')
     p <- add_argument(p, '--aggregation',
                       help='csv containing metadata, output by Cell Ranger')
     return(parse_args(p))
@@ -40,7 +40,15 @@ library(warrenlabSC)
 dir.create(argv$output_dir)
 
 # load Cell Ranger output
-seurat.data <- Read10X(data.dir = argv$feature_matrix)
+if (endsWith(argv$feature_matrix, '.h5')) {
+    if (!requireNamespace("hdf5r", quietly = TRUE)) {
+        stop("Please install package \"hdf5r\" to use 10x h5 as input.",
+             call. = FALSE)
+    }
+    seurat.data <- Read10X_h5(argv$feature_matrix)
+} else {
+    seurat.data <- Read10X(data.dir = argv$feature_matrix)
+}
 seurat <- CreateSeuratObject(seurat.data, min.cells = 3, min.features = 100)
 
 # add metadata to Seurat object

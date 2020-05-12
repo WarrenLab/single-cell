@@ -10,11 +10,14 @@ Description: This package contains helper functions to do some common tasks on
     (differential_expression.R).
 Depends: R (>= 3.1.0)
 Imports:
+    argparser,
     plyr,
     dplyr,
     ggplot2,
     Seurat (>= 3.1.4),
-    edgeR,
+    edgeR
+Suggests:
+    hdf5r,
     MAST
 URL: http://github.com/WarrenLab/single-cell
 License: file LICENSE
