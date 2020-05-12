@@ -189,20 +189,13 @@ ggsave(file.path(argv$output_dir, 'markers_heatmap.pdf'),
 
 if (!is.na(argv$group_var)) {
     # differential expression per cell type between groups
-    per.cluster.DE.edgeR <- FindAllClusterDE(seurat,
-                                             argv$group_var, method=RunEdgeR)
+    per.cluster.DE.edgeR <- FindAllClusterDE(
+        seurat,
+        argv$group_var,
+        method=RunEdgeR
+    )
     write.csv(per.cluster.DE.edgeR,
               file.path(argv$output_dir, 'per_cluster_DE.edgeR.csv'),
-              quote = FALSE)
-    per.cluster.DE.MAST <- FindAllClusterDE(
-        seurat, argv$group_var, method=RunMAST)
-    write.csv(per.cluster.DE.MAST,
-              file.path(argv$output_dir, 'per_cluster_DE.MAST.csv'),
-              quote = FALSE)
-    per.cluster.DE.wilcoxon <- FindAllClusterDE(seurat, argv$group_var,
-                                                method=RunWilcoxon)
-    write.csv(per.cluster.DE.wilcoxon,
-              file.path(argv$output_dir, 'per_cluster_DE.wilcox.csv'),
               quote = FALSE)
 }
 
