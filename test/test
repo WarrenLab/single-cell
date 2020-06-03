@@ -6,7 +6,7 @@
 test_dir=$(dirname $0)
 
 if ! diff -q ${test_dir}/test_out.gtf \
-    <(python ${test_dir}/../mt_prepend_gtf.py ${test_dir}/test_in.gtf)
+    <(mt_prepend_gtf.py ${test_dir}/test_in.gtf)
 then
     exit 1
 else

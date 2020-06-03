@@ -1,2 +1,5 @@
 language: python
-script: test/test
+install: cd python && pip install .
+script:
+    - test/test
+    - python python/gtfez/__init__.py
