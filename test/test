@@ -3,7 +3,10 @@
 # integration test for mt_prepend_gtf.py script
 # exits 0 if the output of the script is correct on a test file, 1 otherwise
 
-if ! diff -q test_out.gtf <(python ../mt_prepend_gtf.py test_in.gtf)
+test_dir=$(dirname $0)
+
+if ! diff -q ${test_dir}/test_out.gtf \
+    <(python ${test_dir}/../mt_prepend_gtf.py ${test_dir}/test_in.gtf)
 then
     exit 1
 else
