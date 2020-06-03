@@ -52,15 +52,24 @@ FindAllConservedMarkers <- function(
     test.use = 'wilcox'
 ) {
     Reduce(function(df, cluster) {
-        df2 <- FindConservedMarkers(
-            seurat,
-            ident.1 = cluster,
-            grouping.var = grouping.var,
-            only.pos = TRUE,
-            test.use = test.use
-        )
-        df2$cluster <- cluster
-        df2$feature <- rownames(df2)
-        plyr::rbind.fill(df, df2)
+        # FindConservedMarkers throws an error if it cannot find any
+        # conserved markers for a cluster, so catch those errors and
+        # deal with them by just not adding any lines to the dataframe
+        # for that cluster and outputting a message.
+        tryCatch({
+            df2 <- FindConservedMarkers(
+                seurat,
+                ident.1 = cluster,
+                grouping.var = grouping.var,
+                only.pos = TRUE,
+                test.use = test.use
+            )
+            df2$cluster <- cluster
+            df2$feature <- rownames(df2)
+            return(plyr::rbind.fill(df, df2))
+        }, error = function(e) {
+            print(paste0('Could not find biomarkers for cluster ', cluster))
+            return(df)
+        })
     }, levels(seurat$seurat_clusters), data.frame())
 }
