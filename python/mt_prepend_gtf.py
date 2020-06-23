@@ -23,7 +23,7 @@ def parse_args():
 def main(args):
     for line in args.gtf:
         if line.startswith('#'):
-            print(line)
+            print(line.rstrip())
             continue
 
         record = gtfez.GTFRecord(line)
