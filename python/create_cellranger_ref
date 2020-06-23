@@ -1,4 +1,9 @@
 #!/bin/env python3
+"""This follows the recommendations of 10X (see https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references), including the optional creation of a "pre-mRNA" version of a reference for nuclei data.
+
+It also uses "mt_prepend_gtf.py" to prepend "MT-" to each gene name  from the "MT" chromosome, if that gene name does not already start with those three characters.
+"""
+
 from random import randint
 import argparse
 import os
