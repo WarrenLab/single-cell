@@ -27,7 +27,7 @@ def main(args):
             continue
 
         record = gtfez.GTFRecord(line)
-        if record.seqname == 'MT' and record.attributes is not None:
+        if record.seqname.upper() == 'MT' and record.attributes is not None:
             if ('gene_name' in record.attributes
                     and not record.attributes['gene_name'].startswith('MT-')):
                 record.attributes['gene_name'] = (
