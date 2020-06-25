@@ -7,5 +7,8 @@ setuptools.setup(
     scripts=[
         'mt_prepend_gtf.py',
         'create_cellranger_ref.py',
-    ]
+    ],
+    package_data={
+        'mkref': ['create_cellranger_ref.sh'],
+    },
 )
