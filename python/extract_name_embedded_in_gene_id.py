@@ -25,10 +25,8 @@ def main(args):
             continue
 
         record = gtfez.GTFRecord(line)
-        if 'gene_name' not in record.attributes and 'gene_id' in record.attributes and record.attributes['gene_name'].lower().startswith('gene-'):
-            if ('gene_name' in record.attributes
-                    and not record.attributes['gene_name'].startswith('MT-')):
-                record.attributes['gene_name'] = record.attributes['gene_id'][5:]
+        if 'gene_name' not in record.attributes and 'gene_id' in record.attributes and record.attributes['gene_id'].lower().startswith('gene-'):
+            record.attributes['gene_name'] = record.attributes['gene_id'][5:]
         print(record)
 
 # command line interface (making this a modulino)
