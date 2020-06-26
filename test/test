@@ -4,11 +4,16 @@
 # exits 0 if the output of the script is correct on a test file, 1 otherwise
 
 test_dir=$(dirname $0)
+extracted_names_gtf=${test_dir}/my_extracted_names.gtf
+mt_updated_gtf=${test_dir}/mt_updated.gtf
+extract_name_embedded_in_gene_id.py ${test_dir}/test_in.gtf > ${extracted_names_gtf}
+mt_prepend_gtf.py ${extracted_names_gtf} > ${mt_updated_gtf}
 
-if ! diff -q ${test_dir}/test_out.gtf \
-    <(mt_prepend_gtf.py ${test_dir}/test_in.gtf)
+if ! diff -q ${test_dir}/test_out.gtf ${mt_updated_gtf}
 then
     exit 1
 else
+    rm ${extracted_names_gtf}
+    rm ${mt_updated_gtf}
     exit 0
 fi

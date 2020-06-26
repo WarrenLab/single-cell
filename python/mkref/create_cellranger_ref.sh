@@ -27,9 +27,13 @@ if [ -z "$pre_mRNA" ]; then
     gtf=${new_gtf}
 fi
 
+# extract gene names (if not already present and if gene id starts with "gene-")
+extracted_gene_name_gtf="${gtf%.gtf}.extracted_gene_name.gtf"
+extract_name_embedded_in_gene_id.py ${gtf} > ${extracted_gene_name_gtf}
+
 # prepend "MT-" to names of genes on chrMT, if necessary
 new_gtf="${gtf%.gtf}.mt_prepended.gtf"
-mt_prepend_gtf.py ${gtf} > ${new_gtf}
+mt_prepend_gtf.py ${extracted_gene_name_gtf} > ${new_gtf}
 gtf=${new_gtf}
 
 # Convert to style preferred by cellranger

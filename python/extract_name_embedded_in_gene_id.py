@@ -1,7 +1,7 @@
 #!/bin/env python3
 """
-Prepend "MT-" to mitochondrial gene names (if not already present) in
-a gtf for cases when the mitochondrial chromosome is named "MT"
+Extract gene name from gene ID if gene name not defined and if gene
+ID starts with "gene-"
 """
 import argparse
 
@@ -9,6 +9,7 @@ import gtfez
 
 
 def parse_args():
+    """argument parser for main method"""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         'gtf',
@@ -21,18 +22,17 @@ def parse_args():
 
 
 def main(args):
+    """main method of script"""
     for line in args.gtf:
         if line.startswith('#'):
             print(line.rstrip())
             continue
 
         record = gtfez.GTFRecord(line)
-        if record.seqname.upper() == 'MT' and record.attributes is not None:
-            if ('gene_name' in record.attributes
-                    and not record.attributes['gene_name'].startswith('MT-')):
-                record.attributes['gene_name'] = (
-                    'MT-' + record.attributes['gene_name']
-                )
+        if ('gene_name' not in record.attributes
+                and 'gene_id' in record.attributes
+                and record.attributes['gene_id'].lower().startswith('gene-')):
+            record.attributes['gene_name'] = record.attributes['gene_id'][5:]
         print(record)
 
 

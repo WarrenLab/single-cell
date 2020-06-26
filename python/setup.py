@@ -6,6 +6,7 @@ setuptools.setup(
     python_requires='>=3.6',
     scripts=[
         'mt_prepend_gtf.py',
+        'extract_name_embedded_in_gene_id.py',
         'create_cellranger_ref.py',
     ],
     package_data={
