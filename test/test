@@ -5,8 +5,11 @@
 
 test_dir=$(dirname $0)
 
+extract_name_embedded_in_gene_id.py ${test_dir}/test_in.gtf > my_extracted_names.gtf
+
+
 if ! diff -q ${test_dir}/test_out.gtf \
-    <(mt_prepend_gtf.py ${test_dir}/test_in.gtf)
+    <(mt_prepend_gtf.py my_extracted_names.gtf)
 then
     exit 1
 else
