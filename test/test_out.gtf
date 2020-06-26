@@ -1,4 +1,5 @@
 #comment
+1	RAP2018-11-26	gene	27143	28644	.	+	.	gene_id "Os01g0100700"; gene_name "RPS5"; gene_source "RAP2018-11-26"; gene_biotype "protein_coding";
 MT	RefSeq	gene	2747	3703	.	+	.	gene_id "ENSCAFG00000022713"; gene_version "1"; gene_name "MT-ND1"; gene_source "RefSeq"; gene_biotype "protein_coding";
 MT	RefSeq	transcript	2747	3703	.	+	.	gene_id "ENSCAFG00000022713"; gene_version "1"; transcript_id "ENSCAFT00000034820"; transcript_version "1"; gene_name "MT-ND1"; gene_source "RefSeq"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "RefSeq"; transcript_biotype "protein_coding";
 MT	RefSeq	exon	2747	3703	.	+	.	gene_id "ENSCAFG00000022713"; gene_version "1"; transcript_id "ENSCAFT00000034820"; transcript_version "1"; exon_number "1"; gene_name "MT-ND1"; gene_source "RefSeq"; gene_biotype "protein_coding"; transcript_name "MT-ND1-201"; transcript_source "RefSeq"; transcript_biotype "protein_coding"; exon_id "ENSCAFE00000226329"; exon_version "1";
