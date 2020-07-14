@@ -33,6 +33,12 @@ def main(args):
                 record.attributes['gene_name'] = (
                     'MT-' + record.attributes['gene_name']
                 )
+        elif record.seqname.upper() == 'PT' and record.attributes is not None:
+            if ('gene_name' in record.attributes
+                    and not record.attributes['gene_name'].startswith('PT-')):
+                record.attributes['gene_name'] = (
+                    'PT-' + record.attributes['gene_name']
+                )
         print(record)
 
 
