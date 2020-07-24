@@ -27,6 +27,13 @@ This command should in theory be able to install all the dependencies so you
 don't have to do it yourself, but usually installing Seurat requires some manual
 intervention to get some of _its_ dependencies.
 
+You can also optionally install the Python scripts for this distribution if you
+need their functionality. (Assuming you start in the "single-cell" directory):
+```bash
+cd python
+python setup.py install
+```
+
 If you want to use nextflow to run the Cell Ranger pipeline (recommended),
 you'll also need to install nextflow with the following command if you haven't
 already:
