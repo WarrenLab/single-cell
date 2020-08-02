@@ -184,7 +184,10 @@ FindAllClusterDE <- function(
         df2$cluster <- cluster
         df2$feature <- rownames(df2)
         rbind(df, df2, make.row.names = FALSE)
-    }, levels(seurat@meta.data[,cluster.var]), data.frame())
+    }, Filter(
+        function(c) is_contrastable(seurat, grouping.var, c, cluster.var),
+        levels(seurat@meta.data[,cluster.var])
+    ), data.frame())
 }
 
 #' Make a heatmap of the most differentially expressed genes in a cluster
@@ -224,10 +227,17 @@ make.diffexp.heatmap <- function(
     selected.rows <- diff.exp[diff.exp$cluster == cluster
                               & abs(diff.exp$fold.change) > min.fc
                               & diff.exp$p < max.p, ]
+    if (dim(selected.rows)[2] == 0) stop("empty heatmap!")
     selected.rows <- selected.rows[order(selected.rows$fold.change), ]
     features <- dplyr::top_n(selected.rows, n = max.features, wt = -p)$feature
     this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
     Seurat::DoHeatmap(this.cluster.only,
                       features = features,
                       group.by = grouping.var) + NoLegend()
+}
+
+is_contrastable <- function(seurat, grouping.var, cluster, cluster.var) {
+    this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
+    group <- as.matrix(this.cluster.only[[grouping.var]])
+    return(length(levels(factor(group[,1]))) != 1)
 }
