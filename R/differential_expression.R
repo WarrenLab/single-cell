@@ -25,6 +25,8 @@ calc.cdr <- function(counts) scale(colMeans(as.matrix(counts) > 0))
 #' @param cluster The number of a cluster to perform DE analysis on
 #' @param grouping.var The name of the metadata variable used to group the
 #'   samples into two groups to compare.
+#' @param cluster.var The name of the metadata variable containing cluster
+#'   assignments ('seurat_clusters' by default)
 #' @return A \code{data.frame} with row names as feature names, and the columns
 #'   \code{p} and \code{fold.change}.
 #' @examples
@@ -33,9 +35,10 @@ calc.cdr <- function(counts) scale(colMeans(as.matrix(counts) > 0))
 RunEdgeR <- function(
     seurat,
     cluster,
-    grouping.var
+    grouping.var,
+    cluster.var = 'seurat_clusters'
 ) {
-    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
+    this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
 
@@ -73,9 +76,10 @@ RunEdgeR <- function(
 RunMAST <- function(
     seurat,
     cluster,
-    grouping.var
+    grouping.var,
+    cluster.var = 'seurat_clusters'
 ) {
-    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
+    this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
     group.names <- levels(factor(group[,1]))
@@ -126,9 +130,10 @@ RunMAST <- function(
 RunWilcoxon <- function(
     seurat,
     cluster,
-    grouping.var
+    grouping.var,
+    cluster.var = 'seurat_clusters'
 ) {
-    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
+    this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
     counts <- this.cluster.only@assays$RNA@counts
     group <- as.matrix(this.cluster.only[[grouping.var]])
     group.names <- levels(factor(group[,1]))
@@ -166,18 +171,20 @@ RunWilcoxon <- function(
 FindAllClusterDE <- function(
     seurat,
     grouping.var,
-    method = RunEdgeR
+    method = RunEdgeR,
+    cluster.var = 'seurat_clusters'
 ) {
     Reduce(function(df, cluster) {
         df2 <- method(
             seurat,
             cluster = cluster,
-            grouping.var = grouping.var
+            grouping.var = grouping.var,
+            cluster.var = cluster.var
         )
         df2$cluster <- cluster
         df2$feature <- rownames(df2)
         rbind(df, df2, make.row.names = FALSE)
-    }, levels(seurat$seurat_clusters), data.frame())
+    }, levels(seurat@meta.data[,cluster.var]), data.frame())
 }
 
 #' Make a heatmap of the most differentially expressed genes in a cluster
@@ -211,14 +218,15 @@ make.diffexp.heatmap <- function(
     grouping.var,
     min.fc = 1,
     max.p = 1e-3,
-    max.features = 30
+    max.features = 30,
+    cluster.var = 'seurat_clusters'
 ) {
     selected.rows <- diff.exp[diff.exp$cluster == cluster
                               & abs(diff.exp$fold.change) > min.fc
                               & diff.exp$p < max.p, ]
     selected.rows <- selected.rows[order(selected.rows$fold.change), ]
     features <- dplyr::top_n(selected.rows, n = max.features, wt = -p)$feature
-    this.cluster.only <- seurat[, which(seurat[['seurat_clusters']] == cluster)]
+    this.cluster.only <- seurat[, which(seurat[[cluster.var]] == cluster)]
     Seurat::DoHeatmap(this.cluster.only,
                       features = features,
                       group.by = grouping.var) + NoLegend()
