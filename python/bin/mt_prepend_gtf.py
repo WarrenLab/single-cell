@@ -27,18 +27,16 @@ def main(args):
             continue
 
         record = gtfez.GTFRecord(line)
-        if record.seqname.upper() == 'MT' and record.attributes is not None:
-            if ('gene_name' in record.attributes
-                    and not record.attributes['gene_name'].startswith('MT-')):
-                record.attributes['gene_name'] = (
-                    'MT-' + record.attributes['gene_name']
-                )
-        elif record.seqname.upper() == 'PT' and record.attributes is not None:
-            if ('gene_name' in record.attributes
-                    and not record.attributes['gene_name'].startswith('PT-')):
-                record.attributes['gene_name'] = (
-                    'PT-' + record.attributes['gene_name']
-                )
+        for seqname in ('MT', 'PT'):
+            prefix = seqname + '-'
+            if record.seqname.upper() == seqname.upper() and record.attributes is not None:
+                if ('gene_name' in record.attributes
+                        and not record.attributes['gene_name'].upper().startswith(prefix.upper())):
+                    this_prefix = record.seqname + '-'
+                    record.attributes['gene_name'] = (
+                        this_prefix + record.attributes['gene_name']
+                    )
+
         print(record)
 
 

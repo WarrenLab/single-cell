@@ -49,7 +49,7 @@ class GTFRecord:
         ])
 
 
-attributes_re = re.compile('^(\w+) "(.+)"$')
+attributes_re = re.compile('^(\w+) "(.+)"(?:;|$)') # allow optional uncaptured trailing semicolon
 def parse_attributes(attributes_string):
     """
     Parses the contents of a GTF attributes field into a dict.
@@ -64,9 +64,8 @@ def parse_attributes(attributes_string):
     >>> parse_attributes('gene_name "ESR1"; gene_biotype "protein_coding";')
     OrderedDict([('gene_name', 'ESR1'), ('gene_biotype', 'protein_coding')])
     """
-    # break attributes into individual 'key "val"' strings, removing
-    # whitespace and the empty one after the last ';'
-    attribute_strings = map(str.strip, attributes_string.split(';')[:-1])
+    # break attributes into individual 'key "val"' strings (assuming the GTF 2.2 standard. See the "attributes" section here: https://mblab.wustl.edu/GTF22.html)
+    attribute_strings = attributes_string.split('; ')
 
     # read all of the pairs into a dictionary and return
     attributes_dict = OrderedDict()
