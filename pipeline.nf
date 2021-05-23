@@ -14,7 +14,7 @@ params.ref_dir = '/path/to/cellranger/ref'
 
 //Replace this path with the path to the cellranger executable. If it's in your PATH, you can leave it as
 // is; otherwise, set this to explicitly point to its location.
-params.path_to_cellranger
+params.path_to_cellranger = 'cellranger'
 
 
 // Replace this with a table of the ID's of the samples to analyze, plus any
@@ -32,6 +32,7 @@ params.sample_sheet = 'samples.csv'
 // path to the run_seurat.R script. If it's in your PATH, you can leave it as
 // is; otherwise, set this to explicitly point to its location.
 params.path_to_run_seurat = 'run_seurat.R'
+
 
 
 /*
@@ -66,7 +67,7 @@ process cellranger_count {
     tuple val(id), file("molecule_info.${id}.h5") into molecule_info
 
     """
-    cellranger count \
+    ${params.path_to_cellranger} count \
         --id=${id} \
         --fastqs=${params.fastqs_dir} \
         --sample=${id} \
@@ -101,7 +102,7 @@ process cellranger_aggregate {
     file "aggregated/outs" into aggregated
 
     """
-    cellranger aggr --id=aggregated --csv=molecule_info.csv
+    ${params.path_to_cellranger} aggr --id=aggregated --csv=molecule_info.csv
     """
 }
 
