@@ -26,6 +26,8 @@ ParseArguments <- function() {
                       help='folder or h5 containing feature matrix')
     p <- add_argument(p, '--aggregation',
                       help='csv containing metadata, output by Cell Ranger')
+    p <- add_argument(p, '--threads', default=4,
+                      help='Number of threads to use')
     return(parse_args(p))
 }
 
@@ -35,6 +37,10 @@ library(Seurat)
 library(dplyr)
 library(ggplot2)
 library(warrenlabSC)
+
+library(future)
+plan("multiprocess", workers = argv$threads)
+future.seed=TRUE
 
 # create output directory
 dir.create(argv$output_dir)
