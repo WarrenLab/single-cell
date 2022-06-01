@@ -1,10 +1,10 @@
 #' Calculate the cellular detection rate
 #'
-#' Given a feature X cell table of raw counts, calculate the cellular detection
+#' Given a feature X cell table of raw counts, calculate the scaled cellular detection
 #' rate for each cell. The cellular detection rate of a cell is a number between
 #' 0 and 1 representing the fraction of the total number of features measured
 #' that have a count > 0 in that cell. It is useful as a covariate in
-#' differential expression analyses.
+#' differential expression analyses. This function returns a vector of scaled CDRs.
 #'
 #' @param counts A feature X cell table of raw counts.
 #' @return A vector of cellular detection rate per cell
